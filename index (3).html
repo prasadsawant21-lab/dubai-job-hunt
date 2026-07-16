@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prasad's Dubai Job Hunt Command Center</title>
+<meta name="description" content="Personalized job search dashboard — Performance Director roles in Dubai">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg-soft: #14141c;
+    --bg-card: #1a1a26;
+    --border: #2a2a3a;
+    --border-bright: #3a3a52;
+    --text: #f4f1ea;
+    --text-dim: #8a8a9a;
+    --text-faint: #5a5a6a;
+    --accent: #d4ff4a;
+    --accent-warm: #ff8c42;
+    --accent-cool: #4adcff;
+    --tier1: #d4ff4a;
+    --tier2: #ff8c42;
+    --tier3: #c8a8ff;
+    --danger: #ff5470;
+    --success: #4ade80;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px; line-height: 1.5; min-height: 100vh;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(212, 255, 74, 0.04) 0%, transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(255, 140, 66, 0.04) 0%, transparent 40%);
+  }
+  .container { max-width: 1400px; margin: 0 auto; padding: 40px 32px; }
+  .hero {
+    border: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--bg-soft) 0%, var(--bg-card) 100%);
+    padding: 40px; margin-bottom: 32px; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; top: 0; right: 0;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+    opacity: 0.08; transform: translate(50%, -50%);
+  }
+  .hero-tag {
+    font-size: 11px; letter-spacing: 0.2em;
+    color: var(--accent); text-transform: uppercase; margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-family: 'Fraunces', serif; font-weight: 500;
+    font-size: clamp(36px, 5vw, 60px); line-height: 1.05;
+    letter-spacing: -0.02em; color: var(--text); margin-bottom: 16px;
+  }
+  .hero h1 em { font-style: italic; font-weight: 400; color: var(--accent); }
+  .hero-sub { color: var(--text-dim); max-width: 720px; font-size: 15px; }
+  .refresh-bar {
+    margin-top: 28px; padding: 20px; background: var(--bg);
+    border: 1px solid var(--accent); display: flex;
+    align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+  }
+  .refresh-info { display: flex; flex-direction: column; gap: 4px; }
+  .refresh-label {
+    font-size: 10px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--accent);
+  }
+  .refresh-time { font-size: 13px; color: var(--text); }
+  .refresh-btn {
+    background: var(--accent); border: none; color: var(--bg);
+    padding: 14px 28px; font-family: inherit; font-size: 12px;
+    letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer;
+    font-weight: 700; transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .refresh-btn:hover { background: var(--text); transform: translateY(-1px); }
+  .refresh-btn:active { transform: translateY(0); }
+  .refresh-icon { display: inline-block; transition: transform 0.6s; }
+  .refresh-btn.spinning .refresh-icon { transform: rotate(360deg); }
+  .hero-stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 24px; margin-top: 32px; padding-top: 32px; border-top: 1px solid var(--border);
+  }
+  .stat-num {
+    font-family: 'Fraunces', serif; font-size: 32px;
+    font-weight: 500; color: var(--accent); line-height: 1;
+  }
+  .stat-label {
+    font-size: 10px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--text-faint); margin-top: 8px;
+  }
+  .tabs {
+    display: flex; gap: 4px; border-bottom: 1px solid var(--border);
+    margin-bottom: 32px; overflow-x: auto; scrollbar-width: thin;
+  }
+  .tab {
+    background: none; border: none; color: var(--text-dim);
+    padding: 16px 20px; font-family: inherit; font-size: 12px;
+    letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+    border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.2s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .panel { display: none; animation: fadeIn 0.3s; }
+  .panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .section-title {
+    font-family: 'Fraunces', serif; font-size: 28px;
+    font-weight: 500; margin-bottom: 8px; letter-spacing: -0.01em;
+  }
+  .section-sub { color: var(--text-dim); margin-bottom: 24px; font-size: 13px; }
+  .controls { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+  .filter-btn {
+    background: var(--bg-soft); border: 1px solid var(--border);
+    color: var(--text-dim); padding: 8px 14px; font-family: inherit;
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: var(--border-bright); color: var(--text); }
+  .filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+  .card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    padding: 20px; transition: all 0.2s; position: relative; overflow: hidden;
+  }
+  .card:hover { border-color: var(--border-bright); transform: translateY(-2px); }
+  .card.fresh { border-color: var(--accent); box-shadow: 0 0 20px rgba(212, 255, 74, 0.15); }
+  .card.fresh::after {
+    content: 'LIVE'; position: absolute; top: 0; right: 0;
+    background: var(--accent); color: var(--bg);
+    padding: 3px 8px; font-size: 9px;
+    letter-spacing: 0.15em; font-weight: 700;
+  }
+  .card-header {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; margin-bottom: 12px; gap: 12px;
+  }
+  .card-name {
+    font-family: 'Fraunces', serif; font-size: 19px;
+    font-weight: 600; line-height: 1.2;
+  }
+  .tier-badge {
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 4px 8px; border: 1px solid; flex-shrink: 0;
+  }
+  .tier-1 { color: var(--tier1); border-color: var(--tier1); }
+  .tier-2 { color: var(--tier2); border-color: var(--tier2); }
+  .tier-3 { color: var(--tier3); border-color: var(--tier3); }
+  .card-meta { color: var(--text-faint); font-size: 11px; margin-bottom: 12px; letter-spacing: 0.05em; }
+  .fit-score { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .fit-bar { flex: 1; height: 4px; background: var(--bg); overflow: hidden; }
+  .fit-fill { height: 100%; background: linear-gradient(90deg, var(--accent-cool), var(--accent)); }
+  .fit-num { font-size: 11px; color: var(--accent); font-weight: 600; }
+  .card-why { color: var(--text-dim); font-size: 12px; margin-bottom: 14px; line-height: 1.5; }
+  .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .action-btn {
+    background: var(--bg-soft); border: 1px solid var(--border);
+    color: var(--text); padding: 6px 10px; font-family: inherit;
+    font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer; text-decoration: none; display: inline-flex;
+    align-items: center; gap: 4px; transition: all 0.15s;
+  }
+  .action-btn:hover { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .action-btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .action-btn.primary:hover { background: var(--text); border-color: var(--text); }
+  .boards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .board-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    padding: 18px; text-decoration: none; color: var(--text);
+    transition: all 0.2s; display: block;
+  }
+  .board-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .board-name { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+  .board-desc { color: var(--text-dim); font-size: 11px; margin-bottom: 10px; }
+  .board-link { color: var(--accent); font-size: 10px; letter-spacing: 0.1em; }
+  .tracker-add {
+    background: var(--bg-card); border: 1px solid var(--border);
+    padding: 20px; margin-bottom: 20px;
+  }
+  .form-row { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .form-row input, .form-row select {
+    background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); padding: 10px 12px; font-family: inherit; font-size: 12px;
+  }
+  .form-row input:focus, .form-row select:focus { outline: none; border-color: var(--accent); }
+  .tracker-table {
+    width: 100%; background: var(--bg-card);
+    border: 1px solid var(--border); border-collapse: collapse;
+  }
+  .tracker-table th {
+    background: var(--bg-soft); text-align: left; padding: 12px;
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-dim); border-bottom: 1px solid var(--border);
+  }
+  .tracker-table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .tracker-table tr:last-child td { border-bottom: none; }
+  .status-pill {
+    display: inline-block; padding: 3px 8px; font-size: 10px;
+    letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid;
+  }
+  .status-applied { color: var(--accent-cool); border-color: var(--accent-cool); }
+  .status-interview { color: var(--accent); border-color: var(--accent); }
+  .status-offer { color: var(--success); border-color: var(--success); }
+  .status-rejected { color: var(--danger); border-color: var(--danger); }
+  .status-saved { color: var(--text-faint); border-color: var(--text-faint); }
+  .del-btn { background: none; border: none; color: var(--text-faint); cursor: pointer; font-size: 16px; }
+  .del-btn:hover { color: var(--danger); }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text-faint); }
+  .template-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    padding: 24px; margin-bottom: 16px;
+  }
+  .template-title { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .template-meta {
+    color: var(--text-faint); font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px;
+  }
+  .template-body {
+    background: var(--bg); border: 1px solid var(--border);
+    padding: 18px; color: var(--text-dim); font-size: 13px;
+    line-height: 1.7; white-space: pre-wrap; margin-bottom: 12px;
+  }
+  .template-body strong { color: var(--accent); font-weight: 500; }
+  .copy-btn {
+    background: var(--accent); border: none; color: var(--bg);
+    padding: 8px 16px; font-family: inherit; font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; font-weight: 600;
+  }
+  .copy-btn:hover { background: var(--text); }
+  .strategy-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px; margin-bottom: 24px;
+  }
+  .strategy-card { background: var(--bg-card); border: 1px solid var(--border); padding: 24px; position: relative; }
+  .strategy-num { font-family: 'Fraunces', serif; font-size: 48px; font-weight: 500; color: var(--accent); line-height: 1; margin-bottom: 12px; }
+  .strategy-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+  .strategy-desc { color: var(--text-dim); font-size: 12px; line-height: 1.6; }
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; background: var(--bg-card);
+    border: 1px solid var(--accent); padding: 16px 20px; color: var(--text);
+    font-size: 13px; transform: translateY(100px); opacity: 0;
+    transition: all 0.3s; z-index: 100;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  footer {
+    margin-top: 60px; padding-top: 32px; border-top: 1px solid var(--border);
+    text-align: center; color: var(--text-faint); font-size: 11px; letter-spacing: 0.1em;
+  }
+  @media (max-width: 720px) {
+    .container { padding: 24px 16px; }
+    .hero { padding: 28px 20px; }
+    .form-row { grid-template-columns: 1fr 1fr; }
+    .tracker-table { display: block; overflow-x: auto; white-space: nowrap; }
+  }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-tag">⚡ Job Hunt Command Center · Dubai</div>
+    <h1>Performance Director, <em>Dubai</em><br>looking for the right room.</h1>
+    <p class="hero-sub">Built for Prasad V. Sawant — 12+ years performance marketing leadership. This tool targets Tier 1 tech platforms and Tier 2 media agencies in Dubai that match your seniority and skillset. Refresh below to pull fresh listings from all major boards.</p>
+
+    <div class="refresh-bar">
+      <div class="refresh-info">
+        <span class="refresh-label">🔄 Last refresh</span>
+        <span class="refresh-time" id="last-refresh">Never — click refresh to begin</span>
+      </div>
+      <button class="refresh-btn" id="refresh-btn" onclick="runRefresh()">
+        <span class="refresh-icon">⟳</span>
+        <span>Refresh Job Search</span>
+      </button>
+    </div>
+
+    <div class="hero-stats">
+      <div><div class="stat-num" id="stat-companies">36</div><div class="stat-label">Target Companies</div></div>
+      <div><div class="stat-num" id="stat-live">7</div><div class="stat-label">Live Openings</div></div>
+      <div><div class="stat-num" id="stat-tier1">14</div><div class="stat-label">Tier 1 Tech</div></div>
+      <div><div class="stat-num" id="stat-applications">0</div><div class="stat-label">Applications</div></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="live">⟶ Live Jobs</button>
+    <button class="tab" data-tab="strategy">⟶ Strategy</button>
+    <button class="tab" data-tab="companies">⟶ Target Companies</button>
+    <button class="tab" data-tab="boards">⟶ Job Boards</button>
+    <button class="tab" data-tab="templates">⟶ Outreach Templates</button>
+    <button class="tab" data-tab="tracker">⟶ Tracker</button>
+  </div>
+
+  <!-- LIVE JOBS PANEL -->
+  <div class="panel active" id="live">
+    <div class="section-title">Live Openings — Ranked by Fit</div>
+    <div class="section-sub">Curated from the latest scrape. Refresh button above will open live searches across LinkedIn, Indeed, Bayt, and GulfTalent to catch any new postings since the last update.</div>
+    <div class="grid" id="live-grid"></div>
+  </div>
+
+  <!-- STRATEGY PANEL -->
+  <div class="panel" id="strategy">
+    <div class="section-title">Your Search Strategy</div>
+    <div class="section-sub">At Director-level, most senior roles never hit job boards. Allocate effort accordingly.</div>
+    <div class="strategy-grid">
+      <div class="strategy-card">
+        <div class="strategy-num">01</div>
+        <div class="strategy-title">Direct outreach (60%)</div>
+        <div class="strategy-desc">70% of senior roles never hit job boards. LinkedIn-message hiring managers directly at target companies.</div>
+      </div>
+      <div class="strategy-card">
+        <div class="strategy-num">02</div>
+        <div class="strategy-title">Recruiter network (20%)</div>
+        <div class="strategy-desc">Robert Half, Charterhouse, Hays, Michael Page, Mindfield. Build relationships with 3-4 senior consultants.</div>
+      </div>
+      <div class="strategy-card">
+        <div class="strategy-num">03</div>
+        <div class="strategy-title">Targeted applications (15%)</div>
+        <div class="strategy-desc">Apply directly via company career pages — never via aggregators for senior roles.</div>
+      </div>
+      <div class="strategy-card">
+        <div class="strategy-num">04</div>
+        <div class="strategy-title">Thought leadership (5%)</div>
+        <div class="strategy-desc">Post 2× weekly on LinkedIn about performance marketing in GCC. Hiring managers will find you.</div>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top: 40px;">Your strongest pitch angles</div>
+    <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 24px;">
+      <div style="font-family: 'Fraunces', serif; font-size: 17px; color: var(--accent); margin-bottom: 6px;">1. The Revenue Operator</div>
+      <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 18px; line-height: 1.7;">"I've managed $24M+ in quarterly revenue at upGrad and built ROAS-based paid frameworks for Petromin Stellantis, Cigna, Lucid Motors. I tie media spend to revenue, not impressions."</p>
+      <div style="font-family: 'Fraunces', serif; font-size: 17px; color: var(--accent); margin-bottom: 6px;">2. The GCC Specialist</div>
+      <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 18px; line-height: 1.7;">"7+ years building performance in the UAE/GCC — luxury real estate, healthcare, automotive, financial services."</p>
+      <div style="font-family: 'Fraunces', serif; font-size: 17px; color: var(--accent); margin-bottom: 6px;">3. The Builder, Not Just the Operator</div>
+      <p style="color: var(--text-dim); font-size: 13px; line-height: 1.7;">"At PIXL Global I'm shipping in-house tools — SEO auditor, Brand Scoring Index, creative design tool. I don't just buy media; I build the infrastructure around it."</p>
+    </div>
+  </div>
+
+  <!-- COMPANIES PANEL -->
+  <div class="panel" id="companies">
+    <div class="section-title">Target Companies — Dubai</div>
+    <div class="section-sub">Filtered for your level and skillset. Fit scores derived from resume match.</div>
+    <div class="controls">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="tier1">Tier 1 Tech</button>
+      <button class="filter-btn" data-filter="tier2">Tier 2 Agencies</button>
+      <button class="filter-btn" data-filter="tier3">Tier 3 In-house</button>
+      <button class="filter-btn" data-filter="top">Top Fit (85+)</button>
+    </div>
+    <div class="grid" id="company-grid"></div>
+  </div>
+
+  <!-- BOARDS PANEL -->
+  <div class="panel" id="boards">
+    <div class="section-title">Curated Job Boards — Dubai / GCC</div>
+    <div class="section-sub">Pre-filtered for senior performance / digital / marketing roles.</div>
+    <div class="boards-grid" id="boards-grid"></div>
+  </div>
+
+  <!-- TEMPLATES PANEL -->
+  <div class="panel" id="templates">
+    <div class="section-title">Outreach Templates</div>
+    <div class="section-sub">Personalized for your background. Replace [BRACKETS] with specifics.</div>
+    <div id="templates-list"></div>
+  </div>
+
+  <!-- TRACKER PANEL -->
+  <div class="panel" id="tracker">
+    <div class="section-title">Application Tracker</div>
+    <div class="section-sub">Saved locally in your browser.</div>
+    <div class="tracker-add">
+      <div class="form-row">
+        <input type="text" id="t-company" placeholder="Company">
+        <input type="text" id="t-role" placeholder="Role">
+        <select id="t-status">
+          <option value="saved">Saved</option>
+          <option value="applied">Applied</option>
+          <option value="interview">Interview</option>
+          <option value="offer">Offer</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <button class="copy-btn" onclick="addApplication()">+ Add</button>
+      </div>
+      <div class="form-row">
+        <input type="text" id="t-contact" placeholder="Contact / Hiring Manager">
+        <input type="date" id="t-date">
+        <input type="text" id="t-notes" placeholder="Notes" style="grid-column: span 2;">
+      </div>
+    </div>
+    <table class="tracker-table">
+      <thead>
+        <tr><th>Company</th><th>Role</th><th>Status</th><th>Contact</th><th>Date</th><th>Notes</th><th></th></tr>
+      </thead>
+      <tbody id="tracker-body">
+        <tr><td colspan="7" class="empty-state">No applications yet.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    Built for Prasad V. Sawant · Refreshes open live searches on LinkedIn, Indeed, Bayt & GulfTalent
+  </footer>
+</div>
+
+<div class="toast" id="toast">✓ Opened 4 live searches in new tabs</div>
+
+<script>
+// ============ LIVE JOBS (updated on each refresh from curated sources) ============
+const liveJobs = [
+  {
+    title: "Head of Growth & Performance Marketing",
+    company: "METABOLIC",
+    location: "Dubai",
+    posted: "May 11, 2026",
+    tier: 1,
+    fit: 95,
+    why: "Wants 8-12 yrs growth/performance (you have 12+). Meta/PMax/TikTok/GA4/HubSpot — literally your resume. Healthcare GCC — you ran Cigna + PureHealth at Boopin. Multi-million AED budgets — you ran $24M+ quarterly.",
+    url: "https://to.indeed.com/aatn2pdkrl2b"
+  },
+  {
+    title: "Head of Growth — UAE",
+    company: "REVOLUT",
+    location: "Dubai",
+    posted: "Feb 18, 2026",
+    tier: 1,
+    fit: 92,
+    why: "Tier 1 fintech (75M+ customers). 10+ yrs B2C acquisition. Building & leading local team. Your CBD Bank + AD Ports work bridges the fintech gap.",
+    url: "https://to.indeed.com/aax8qdtny2my"
+  },
+  {
+    title: "Head of CRM",
+    company: "REVOLUT",
+    location: "Dubai",
+    posted: "Jul 8, 2026",
+    tier: 1,
+    fit: 85,
+    why: "FRESH POSTING. HubSpot CRM ownership matches PIXL role. Lifecycle marketing + segmentation + revenue reporting. More systems-focused.",
+    url: "https://to.indeed.com/aaf89x6ml6q9"
+  },
+  {
+    title: "Media Manager",
+    company: "PUIG (Luxury Beauty)",
+    location: "Dubai",
+    posted: "Jul 9, 2026",
+    tier: 2,
+    fit: 84,
+    why: "FRESH POSTING. Luxury brand at Chalhoub-tier — fits your luxury vertical experience (Maravéa/Hermina real estate).",
+    url: "https://to.indeed.com/aa4pxwbkwttx"
+  },
+  {
+    title: "Head of Marketing",
+    company: "DNAGTX (Genetics)",
+    location: "Dubai",
+    posted: "May 12, 2026",
+    tier: 2,
+    fit: 78,
+    why: "Health-tech, senior marketing lead. Less performance-focused but director-level ownership.",
+    url: "https://to.indeed.com/aavyfvq2y9zv"
+  },
+  {
+    title: "Head of E-commerce & Trade Marketing",
+    company: "Toy Station",
+    location: "Dubai",
+    posted: "Jun 2, 2026",
+    tier: 3,
+    fit: 76,
+    why: "E-com ROAS work directly relevant. Retail vertical shift from real estate/auto.",
+    url: "https://to.indeed.com/aa8s7tvj2wbp"
+  },
+  {
+    title: "Cluster Director eCommerce & Distribution",
+    company: "Dukes The Palm / NH Collection",
+    location: "Dubai",
+    posted: "May 13, 2026",
+    tier: 3,
+    fit: 74,
+    why: "Hospitality e-commerce. Broader than performance but director-level with commercial ownership.",
+    url: "https://to.indeed.com/aacrgc2nymzw"
+  }
+];
+
+// ============ COMPANIES ============
+const companies = [
+  { name: "Google", tier: 1, type: "Tech Platform", fit: 92, why: "Marketing Solutions / gTech roles in Dubai often hire senior agency leaders. Your DV360 + GA4 + multi-vertical GCC background is exactly their profile.", careers: "https://www.google.com/about/careers/applications/jobs/results/?location=Dubai", linkedin: "https://www.linkedin.com/jobs/search/?keywords=performance%20marketing&f_C=1441&location=Dubai" },
+  { name: "Meta", tier: 1, type: "Tech Platform", fit: 94, why: "Client Solutions Manager / Marketing Science roles for MENA. Meta Ads expertise + agency leadership + real estate depth is a strong match.", careers: "https://www.metacareers.com/jobs/?offices[0]=Dubai%2C%20United%20Arab%20Emirates", linkedin: "https://www.linkedin.com/jobs/search/?keywords=client%20solutions%20manager&f_C=10667&location=Dubai" },
+  { name: "TikTok", tier: 1, type: "Tech Platform", fit: 90, why: "Growth Partnerships / Client Solutions Manager roles in MENA. They prioritize performance agency backgrounds.", careers: "https://careers.tiktok.com/position?keywords=&category=&location=CT_134", linkedin: "https://www.linkedin.com/jobs/search/?keywords=client%20solutions&f_C=23438645&location=Dubai" },
+  { name: "Snap Inc.", tier: 1, type: "Tech Platform", fit: 87, why: "Snap MENA team is lean. Stellantis + Lucid Motors auto experience aligns with key advertiser base.", careers: "https://careers.snap.com/jobs?location=Dubai", linkedin: "https://www.linkedin.com/jobs/search/?keywords=snap&location=Dubai" },
+  { name: "LinkedIn", tier: 1, type: "Tech Platform", fit: 88, why: "Marketing Solutions Account Director. B2B + education (upGrad) + financial services maps to LinkedIn's product fit.", careers: "https://careers.linkedin.com/jobs?country=ae", linkedin: "https://www.linkedin.com/jobs/search/?keywords=marketing%20solutions&f_C=1337&location=Dubai" },
+  { name: "Amazon Ads", tier: 1, type: "Tech Platform", fit: 85, why: "Amazon DSP and Ads team in Dubai. You already have DSP experience — direct match.", careers: "https://www.amazon.jobs/en/locations/dubai-united-arab-emirates", linkedin: "https://www.linkedin.com/jobs/search/?keywords=amazon%20ads&location=Dubai" },
+  { name: "Microsoft Advertising", tier: 1, type: "Tech Platform", fit: 80, why: "Smaller MENA team but expanding. Senior account/solutions roles. SA360 + cross-platform travels well.", careers: "https://careers.microsoft.com/v2/global/en/search?lc=Dubai%2C%20United%20Arab%20Emirates&l=en_us", linkedin: "https://www.linkedin.com/jobs/search/?keywords=microsoft%20advertising&location=Dubai" },
+  { name: "Spotify", tier: 1, type: "Tech Platform", fit: 78, why: "Building MENA ad sales team. Programmatic + audio is a growth area.", careers: "https://www.lifeatspotify.com/jobs?l=dubai", linkedin: "https://www.linkedin.com/jobs/search/?keywords=spotify%20advertising&location=Dubai" },
+  { name: "Netflix", tier: 1, type: "Streaming / Ads", fit: 78, why: "Netflix ad tier expanding to MENA. Growth Marketing / Ad Sales senior roles emerging.", careers: "https://jobs.netflix.com/search?location=United%20Arab%20Emirates", linkedin: "https://www.linkedin.com/jobs/search/?keywords=netflix&location=Dubai" },
+  { name: "Careem (Uber)", tier: 1, type: "Tech / Super-app", fit: 89, why: "Dubai HQ, very active in senior performance hiring. E-comm + ROAS + multi-market GCC fits their model.", careers: "https://www.careem.com/careers", linkedin: "https://www.linkedin.com/jobs/search/?keywords=performance%20marketing&f_C=2374504&location=Dubai" },
+  { name: "Noon", tier: 1, type: "E-commerce", fit: 90, why: "Major MENA e-commerce player. Hires senior performance/CRM leaders aggressively.", careers: "https://www.noon.com/uae-en/careers/", linkedin: "https://www.linkedin.com/jobs/search/?keywords=performance%20marketing&f_C=19102488&location=Dubai" },
+  { name: "Talabat", tier: 1, type: "Food / Delivery", fit: 86, why: "Growth and performance teams hire continually. Cross-vertical agency exp translates to app-install + e-comm.", careers: "https://careers.talabat.com/", linkedin: "https://www.linkedin.com/jobs/search/?keywords=growth&f_C=2421868&location=Dubai" },
+  { name: "Revolut", tier: 1, type: "Fintech", fit: 91, why: "Currently hiring Head of Growth UAE + Head of CRM. Both fit your profile.", careers: "https://www.revolut.com/careers/", linkedin: "https://www.linkedin.com/jobs/search/?keywords=revolut&location=Dubai" },
+  { name: "Pinterest", tier: 1, type: "Tech Platform", fit: 75, why: "Pinterest MENA partnerships team is small.", careers: "https://www.pinterestcareers.com/jobs/", linkedin: "https://www.linkedin.com/jobs/search/?keywords=pinterest&location=Dubai" },
+  { name: "GroupM (WPP)", tier: 2, type: "Holding — Media", fit: 95, why: "You're already a GroupM alum (India). Mindshare, EssenceMediacom, Wavemaker all hire Performance Directors. Warmest re-entry.", careers: "https://careers.groupm.com/", linkedin: "https://www.linkedin.com/jobs/search/?keywords=performance%20director&f_C=2429&location=Dubai" },
+  { name: "Publicis Media", tier: 2, type: "Holding — Media", fit: 93, why: "Starcom, Zenith, Spark Foundry all in Dubai. Performance/Digital Directors hired regularly.", careers: "https://www.publicisgroupe.com/en/careers", linkedin: "https://www.linkedin.com/jobs/search/?keywords=performance%20director&f_C=1741&location=Dubai" },
+  { name: "Omnicom Media Group", tier: 2, type: "Holding — Media", fit: 92, why: "OMD, PHD, Hearts & Science — strong Dubai presence, hires senior performance leads constantly.", careers: "https://omnicommediagroup.com/careers/", linkedin: "https://www.linkedin.com/jobs/search/?keywords=performance&f_C=18027&location=Dubai" },
+  { name: "IPG Mediabrands", tier: 2, type: "Holding — Media", fit: 96, why: "You worked at MCN Magna-Global + Initiative (IPG). Strongest re-entry. Reach out to ex-colleagues first.", careers: "https://www.ipgmediabrands.com/careers/", linkedin: "https://www.linkedin.com/jobs/search/?keywords=performance&f_C=2433&location=Dubai" },
+  { name: "Dentsu", tier: 2, type: "Holding — Media", fit: 89, why: "Carat, iProspect, Merkle. iProspect specifically is performance-led. Growing in MENA.", careers: "https://www.dentsu.com/careers", linkedin: "https://www.linkedin.com/jobs/search/?keywords=performance&f_C=3007&location=Dubai" },
+  { name: "Havas Media", tier: 2, type: "Holding — Media", fit: 84, why: "Smaller Dubai office but senior digital roles open. Direct outreach recommended.", careers: "https://careers.havas.com/", linkedin: "https://www.linkedin.com/jobs/search/?keywords=performance&f_C=1953&location=Dubai" },
+  { name: "Socialize", tier: 2, type: "Independent Agency", fit: 86, why: "Strong independent digital agency. Senior Performance / Account Director roles.", careers: "https://www.socializeagency.com/careers", linkedin: "https://www.linkedin.com/jobs/search/?keywords=socialize&location=Dubai" },
+  { name: "Hug Digital", tier: 2, type: "Independent Agency", fit: 85, why: "MENA-focused performance shop with luxury clients. Direct match for real estate background.", careers: "https://www.hugdigital.com/", linkedin: "https://www.linkedin.com/jobs/search/?keywords=hug%20digital&location=Dubai" },
+  { name: "Performics", tier: 2, type: "Performance Agency", fit: 91, why: "Pure-play performance agency under Publicis. Built for your background.", careers: "https://www.performics.com/careers/", linkedin: "https://www.linkedin.com/jobs/search/?keywords=performics&location=Dubai" },
+  { name: "Reprise (IPG)", tier: 2, type: "Performance Agency", fit: 93, why: "Performance/SEO/programmatic specialist. IPG family — instant credibility with your history.", careers: "https://www.reprisedigital.com/careers", linkedin: "https://www.linkedin.com/jobs/search/?keywords=reprise&location=Dubai" },
+  { name: "Accenture Song", tier: 2, type: "Consulting + Agency", fit: 82, why: "Growing fast in MENA. Performance + transformation hybrid roles. Premium pay scales.", careers: "https://www.accenture.com/ae-en/careers", linkedin: "https://www.linkedin.com/jobs/search/?keywords=accenture%20song&location=Dubai" },
+  { name: "PHD Media", tier: 2, type: "Holding — Media", fit: 89, why: "Omnicom shop, Dubai office actively hires senior performance/digital directors.", careers: "https://www.phdmedia.com/careers/", linkedin: "https://www.linkedin.com/jobs/search/?keywords=phd%20media&location=Dubai" },
+  { name: "Mindshare (WPP)", tier: 2, type: "Holding — Media", fit: 90, why: "WPP performance flagship. Director roles open regularly. GroupM India past helps.", careers: "https://www.mindshareworld.com/careers", linkedin: "https://www.linkedin.com/jobs/search/?keywords=mindshare&location=Dubai" },
+  { name: "Wavemaker", tier: 2, type: "Holding — Media", fit: 89, why: "WPP, performance-strong. Senior Client Lead / Performance Director roles.", careers: "https://wavemakerglobal.com/careers/", linkedin: "https://www.linkedin.com/jobs/search/?keywords=wavemaker&location=Dubai" },
+  { name: "EssenceMediacom", tier: 2, type: "Holding — Media", fit: 90, why: "WPP merger. Data-led, performance-led — built for your skillset.", careers: "https://www.essencemediacom.com/careers", linkedin: "https://www.linkedin.com/jobs/search/?keywords=essencemediacom&location=Dubai" },
+  { name: "iProspect (Dentsu)", tier: 2, type: "Performance Agency", fit: 92, why: "Performance-only Dentsu shop. Direct profile match.", careers: "https://www.iprospect.com/careers/", linkedin: "https://www.linkedin.com/jobs/search/?keywords=iprospect&location=Dubai" },
+  { name: "Memac Ogilvy", tier: 2, type: "Independent Agency", fit: 80, why: "WPP MENA. More creative-led but growing performance practice.", careers: "https://www.ogilvy.com/careers", linkedin: "https://www.linkedin.com/jobs/search/?keywords=memac%20ogilvy&location=Dubai" },
+  { name: "Emaar", tier: 3, type: "Real Estate", fit: 88, why: "Luxury real estate background is directly relevant. Senior in-house marketing roles.", careers: "https://www.emaar.com/en/careers/", linkedin: "https://www.linkedin.com/jobs/search/?keywords=emaar&location=Dubai" },
+  { name: "Damac Properties", tier: 3, type: "Real Estate", fit: 87, why: "Aggressive performance marketing org. Senior roles open frequently.", careers: "https://www.damacproperties.com/en/careers", linkedin: "https://www.linkedin.com/jobs/search/?keywords=damac&location=Dubai" },
+  { name: "Aldar Properties", tier: 3, type: "Real Estate", fit: 85, why: "Abu Dhabi-anchored, Dubai presence. Senior digital/performance roles.", careers: "https://www.aldar.com/en/careers", linkedin: "https://www.linkedin.com/jobs/search/?keywords=aldar&location=Dubai" },
+  { name: "Chalhoub Group", tier: 3, type: "Luxury Retail", fit: 86, why: "Luxury retail group. Heavy paid media, CRM. Luxury real estate work translates well.", careers: "https://www.chalhoubgroup.com/careers", linkedin: "https://www.linkedin.com/jobs/search/?keywords=chalhoub&location=Dubai" },
+  { name: "PureHealth Group", tier: 3, type: "Healthcare", fit: 81, why: "You worked on this account at Boopin — warmest possible in-house move.", careers: "https://www.purehealth.ae/careers", linkedin: "https://www.linkedin.com/jobs/search/?keywords=purehealth&location=Dubai" }
+];
+
+// ============ REFRESH SEARCHES ============
+const refreshUrls = [
+  { name: "LinkedIn — Senior Performance Dubai (24h)", url: "https://www.linkedin.com/jobs/search/?keywords=performance%20director%20OR%20head%20of%20performance%20OR%20growth%20director&location=Dubai&f_E=4%2C5%2C6&f_TPR=r86400" },
+  { name: "LinkedIn — Big Tech Dubai (week)", url: "https://www.linkedin.com/jobs/search/?keywords=marketing%20solutions%20OR%20client%20partner&location=Dubai&f_C=1441%2C10667%2C23438645%2C1337&f_TPR=r604800" },
+  { name: "Indeed UAE — Head of Performance", url: "https://ae.indeed.com/jobs?q=head+of+performance+OR+performance+director&l=Dubai&fromage=7" },
+  { name: "Bayt.com — Management Marketing", url: "https://www.bayt.com/en/uae/jobs/?role_type%5B0%5D=management&category%5B0%5D=marketing-pr" }
+];
+
+// ============ JOB BOARDS ============
+const boards = [
+  { name: "LinkedIn — Senior Dubai", desc: "Director-level, last 7 days", url: "https://www.linkedin.com/jobs/search/?keywords=performance%20director%20OR%20head%20of%20performance&location=Dubai&f_E=4%2C5%2C6&f_TPR=r604800" },
+  { name: "LinkedIn — Big Tech Dubai", desc: "Google, Meta, TikTok, Snap, LinkedIn", url: "https://www.linkedin.com/jobs/search/?keywords=marketing%20OR%20performance&location=Dubai&f_C=1441%2C10667%2C23438645%2C1337" },
+  { name: "Bayt.com — Marketing Management", desc: "MENA's largest board, senior marketing", url: "https://www.bayt.com/en/uae/jobs/?role_type%5B0%5D=management&category%5B0%5D=marketing-pr" },
+  { name: "GulfTalent — Director-level", desc: "Gulf-region focused, exec level", url: "https://www.gulftalent.com/uae/jobs/marketing-and-pr-1?seniority=director" },
+  { name: "Indeed UAE — Performance", desc: "Head of / Director performance", url: "https://ae.indeed.com/jobs?q=performance+marketing+director&l=Dubai" },
+  { name: "Naukrigulf — Marketing Director", desc: "Strong UAE coverage", url: "https://www.naukrigulf.com/marketing-director-jobs-in-uae" },
+  { name: "Wellfound (AngelList)", desc: "Careem, Noon, Talabat, scale-ups", url: "https://wellfound.com/jobs?location=Dubai&role=growth" },
+  { name: "Charterhouse", desc: "Premium recruitment, marketing leadership", url: "https://www.charterhouseme.ae/jobs/marketing-pr/" },
+  { name: "Robert Half UAE", desc: "Senior marketing / digital director", url: "https://www.roberthalf.ae/jobs/marketing" },
+  { name: "Hays Middle East", desc: "Marketing director / VP-level", url: "https://www.hays.ae/jobs/marketing-digital" },
+  { name: "Michael Page", desc: "Senior marketing leadership MENA", url: "https://www.michaelpage.ae/jobs/marketing" },
+  { name: "Mindfield Resources", desc: "Agency + brand-side exec roles", url: "https://www.mindfieldresources.com/" }
+];
+
+// ============ TEMPLATES ============
+const templates = [
+  {
+    title: "Cold outreach — Hiring Manager (Tier 1 tech)",
+    meta: "For Google / Meta / Snap / TikTok — Marketing Solutions or Client Partner roles",
+    body: `Subject: 12 yrs performance marketing in GCC — exploring [COMPANY] Client Solutions
+
+Hi [NAME],
+
+I lead growth at PIXL Global in Dubai — performance marketing for luxury and enterprise brands across GCC. Before this I built and ran the performance practice at Boopin (Petromin Stellantis, PureHealth, Lucid Motors), and earlier owned a $24M quarterly revenue P&L at upGrad.
+
+I've noticed [COMPANY] is investing in [SPECIFIC INITIATIVE]. With 12+ years buying on your platform at scale across automotive, healthcare, financial services, and real estate verticals, I think I could help your advertiser community get more from it.
+
+Open to a 20-min conversation if there's a fit — happy to bring three specific GCC client cases that map to your priorities.
+
+Best,
+Prasad Sawant
++971 58 953 7400 | LinkedIn`
+  },
+  {
+    title: "Cold outreach — Agency Leadership (Tier 2)",
+    meta: "For media agency leaders — Performance Director / Head of roles",
+    body: `Subject: Performance Director — track record in GCC, exploring [AGENCY]
+
+Hi [NAME],
+
+I'm a Performance Marketing leader with 12+ years across GCC and India — currently Head of Growth at PIXL Global, previously Head of Performance at Boopin where I directed performance teams for Petromin Stellantis, PureHealth, Cigna, Lucid Motors, AD Ports, Nissan, Renault, and Infiniti.
+
+Before that I was Senior Digital Performance Manager — Activation Lead at MCN Magna-Global (IPG), running performance and branding for CBD Bank, Meraas, Forever21, Dubai Properties, and Mazda. And earlier, Associate Director at upGrad managing a $24M quarterly target with a 20-person team.
+
+I'm exploring senior performance director / head-of roles where I can own a P&L, scale a team, and tie media spend to revenue end-to-end. [AGENCY] keeps coming up because of [SPECIFIC REASON].
+
+If you're open to a chat, I'd value 20 minutes.
+
+Best,
+Prasad Sawant
++971 58 953 7400 | LinkedIn`
+  },
+  {
+    title: "Warm reconnect — Ex-colleague / network",
+    meta: "For reaching out to former GroupM / MCN / Madison / IPG colleagues",
+    body: `Subject: Catching up — and a small ask
+
+Hey [NAME],
+
+It's been a while — hope you're doing well. Last I saw on LinkedIn you're at [COMPANY] now in [ROLE].
+
+A small ask: I'm at PIXL Global now leading growth, but actively exploring senior performance/director roles at the agency and platform side in Dubai. Tier 1 tech (Google, Meta, Snap, TikTok) and the bigger media networks especially.
+
+If anything comes across your desk that fits, or if you'd be open to a quick coffee/call to swap intel on the market, I'd really appreciate it.
+
+Either way — let's reconnect.
+
+Cheers,
+Prasad`
+  },
+  {
+    title: "Recruiter outreach — Specialist firms",
+    meta: "For Charterhouse / Hays / Michael Page / Mindfield consultants",
+    body: `Subject: Performance Director — Dubai-based, exploring senior agency + platform roles
+
+Hi [NAME],
+
+I'm a Dubai-based Performance Marketing Director with 12+ years across GCC and India, currently at PIXL Global. I'm in active exploration for my next role — open to:
+
+→ Senior Performance / Head of Performance at Tier 1/2 agencies (IPG, WPP, Publicis, Omnicom, Dentsu)
+→ Marketing Solutions / Client Partner roles at Meta, Google, TikTok, Snap, LinkedIn
+→ Senior in-house digital/growth roles at premium UAE brands
+
+Quick context:
+• Managed $24M+ quarterly revenue at upGrad
+• Directed performance for Petromin Stellantis, PureHealth, Cigna, Lucid Motors, Meraas, Dubai Properties, CBD Bank
+• Deep expertise: Meta, Google, DV360, TikTok, Snap, LinkedIn, programmatic, HubSpot
+
+I've attached my CV. Would value a 20-min intro call.
+
+Best,
+Prasad Sawant
++971 58 953 7400 | prasadsawant21@gmail.com | LinkedIn`
+  },
+  {
+    title: "Follow-up — 7 days after no response",
+    meta: "Short, light, no pressure",
+    body: `Subject: re: [ORIGINAL SUBJECT]
+
+Hi [NAME],
+
+Just floating this back up in case it got buried. No rush — happy to revisit at a better time.
+
+If timing isn't right at all, no problem. Otherwise even a 15-min call would be useful.
+
+Best,
+Prasad`
+  },
+  {
+    title: "LinkedIn InMail — short version",
+    meta: "Character-limited, punchy. For LinkedIn direct messages.",
+    body: `Hi [NAME] — 12+ years performance marketing in GCC. Currently Head of Growth at PIXL Global, previously Head of Performance at Boopin (Stellantis, PureHealth, Lucid). Exploring senior performance/director roles. [COMPANY] is high on my list because [SPECIFIC REASON]. Open to a 20-min conversation? Prasad`
+  }
+];
+
+// ============ RENDER ============
+function renderLiveJobs() {
+  const grid = document.getElementById('live-grid');
+  liveJobs.sort((a, b) => b.fit - a.fit);
+  grid.innerHTML = liveJobs.map(j => `
+    <div class="card ${j.fit >= 85 ? 'fresh' : ''}">
+      <div class="card-header">
+        <div class="card-name">${j.title}</div>
+        <div class="tier-badge tier-${j.tier}">${j.company}</div>
+      </div>
+      <div class="card-meta">${j.location} · Posted ${j.posted}</div>
+      <div class="fit-score">
+        <div class="fit-bar"><div class="fit-fill" style="width: ${j.fit}%"></div></div>
+        <div class="fit-num">${j.fit}% fit</div>
+      </div>
+      <div class="card-why">${j.why}</div>
+      <div class="card-actions">
+        <a href="${j.url}" target="_blank" class="action-btn primary">→ Apply</a>
+        <button class="action-btn" onclick="addToTracker('${j.company.replace(/'/g, "")}', '${j.title.replace(/'/g, "")}')">+ Track</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderCompanies(filter = 'all') {
+  const grid = document.getElementById('company-grid');
+  let filtered = companies;
+  if (filter === 'tier1') filtered = companies.filter(c => c.tier === 1);
+  if (filter === 'tier2') filtered = companies.filter(c => c.tier === 2);
+  if (filter === 'tier3') filtered = companies.filter(c => c.tier === 3);
+  if (filter === 'top') filtered = companies.filter(c => c.fit >= 85);
+  filtered.sort((a, b) => b.fit - a.fit);
+  grid.innerHTML = filtered.map(c => `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-name">${c.name}</div>
+        <div class="tier-badge tier-${c.tier}">Tier ${c.tier}</div>
+      </div>
+      <div class="card-meta">${c.type}</div>
+      <div class="fit-score">
+        <div class="fit-bar"><div class="fit-fill" style="width: ${c.fit}%"></div></div>
+        <div class="fit-num">${c.fit}% fit</div>
+      </div>
+      <div class="card-why">${c.why}</div>
+      <div class="card-actions">
+        <a href="${c.careers}" target="_blank" class="action-btn primary">→ Careers</a>
+        <a href="${c.linkedin}" target="_blank" class="action-btn">LinkedIn</a>
+        <button class="action-btn" onclick="addToTracker('${c.name.replace(/'/g, "")}', '')">+ Track</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderBoards() {
+  document.getElementById('boards-grid').innerHTML = boards.map(b => `
+    <a href="${b.url}" target="_blank" class="board-card">
+      <div class="board-name">${b.name}</div>
+      <div class="board-desc">${b.desc}</div>
+      <div class="board-link">OPEN →</div>
+    </a>
+  `).join('');
+}
+
+function renderTemplates() {
+  document.getElementById('templates-list').innerHTML = templates.map((t, i) => `
+    <div class="template-card">
+      <div class="template-title">${t.title}</div>
+      <div class="template-meta">${t.meta}</div>
+      <div class="template-body" id="tpl-${i}">${t.body}</div>
+      <button class="copy-btn" onclick="copyTemplate(${i})">Copy to Clipboard</button>
+    </div>
+  `).join('');
+}
+
+function copyTemplate(i) {
+  const text = document.getElementById('tpl-' + i).innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    const original = btn.innerText;
+    btn.innerText = '✓ Copied';
+    setTimeout(() => btn.innerText = original, 1500);
+  });
+}
+
+// ============ REFRESH LOGIC ============
+function runRefresh() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+
+  // Open all live search URLs in new tabs
+  refreshUrls.forEach((r, i) => {
+    setTimeout(() => window.open(r.url, '_blank'), i * 300);
+  });
+
+  // Update timestamp
+  const now = new Date();
+  const timestamp = now.toLocaleString('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+  document.getElementById('last-refresh').textContent = timestamp + ' (Dubai time)';
+  localStorage.setItem('lastRefresh', timestamp);
+
+  // Toast
+  const toast = document.getElementById('toast');
+  toast.textContent = `✓ Opened ${refreshUrls.length} live searches in new tabs`;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+
+  setTimeout(() => btn.classList.remove('spinning'), 600);
+}
+
+// ============ TRACKER ============
+function loadApplications() {
+  const data = JSON.parse(localStorage.getItem('jobApps') || '[]');
+  renderTracker(data);
+  document.getElementById('stat-applications').textContent = data.length;
+}
+
+function renderTracker(apps) {
+  const body = document.getElementById('tracker-body');
+  if (apps.length === 0) {
+    body.innerHTML = '<tr><td colspan="7" class="empty-state">No applications yet.</td></tr>';
+    return;
+  }
+  body.innerHTML = apps.map((a, i) => `
+    <tr>
+      <td><strong>${a.company}</strong></td>
+      <td>${a.role}</td>
+      <td><span class="status-pill status-${a.status}">${a.status}</span></td>
+      <td>${a.contact || '—'}</td>
+      <td>${a.date || '—'}</td>
+      <td>${a.notes || '—'}</td>
+      <td><button class="del-btn" onclick="deleteApp(${i})">×</button></td>
+    </tr>
+  `).join('');
+}
+
+function addApplication() {
+  const company = document.getElementById('t-company').value.trim();
+  if (!company) return alert('Company name required');
+  const apps = JSON.parse(localStorage.getItem('jobApps') || '[]');
+  apps.unshift({
+    company,
+    role: document.getElementById('t-role').value || '—',
+    status: document.getElementById('t-status').value,
+    contact: document.getElementById('t-contact').value,
+    date: document.getElementById('t-date').value,
+    notes: document.getElementById('t-notes').value
+  });
+  localStorage.setItem('jobApps', JSON.stringify(apps));
+  document.querySelectorAll('.tracker-add input').forEach(i => i.value = '');
+  loadApplications();
+}
+
+function addToTracker(companyName, roleName) {
+  document.querySelector('[data-tab="tracker"]').click();
+  document.getElementById('t-company').value = companyName;
+  if (roleName) document.getElementById('t-role').value = roleName;
+  document.getElementById('t-company').focus();
+}
+
+function deleteApp(i) {
+  if (!confirm('Delete this application?')) return;
+  const apps = JSON.parse(localStorage.getItem('jobApps') || '[]');
+  apps.splice(i, 1);
+  localStorage.setItem('jobApps', JSON.stringify(apps));
+  loadApplications();
+}
+
+// ============ TABS ============
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+  });
+});
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderCompanies(btn.dataset.filter);
+  });
+});
+
+// ============ INIT ============
+document.getElementById('stat-companies').textContent = companies.length;
+document.getElementById('stat-live').textContent = liveJobs.length;
+document.getElementById('stat-tier1').textContent = companies.filter(c => c.tier === 1).length;
+const lastRefresh = localStorage.getItem('lastRefresh');
+if (lastRefresh) document.getElementById('last-refresh').textContent = lastRefresh + ' (Dubai time)';
+
+renderLiveJobs();
+renderCompanies();
+renderBoards();
+renderTemplates();
+loadApplications();
+</script>
+</body>
+</html>
